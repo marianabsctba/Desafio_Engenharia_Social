@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desafio de Engenharia Social – OSINT + Phishing | Be Safe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  --wine: #5c1a2e;
+  --wine-light: #7a2340;
+  --wine-pale: #c4687a;
+  --graphite: #1a1a1f;
+  --graphite-mid: #242430;
+  --graphite-light: #2e2e3c;
+  --olive: #3a4228;
+  --olive-light: #4e5a34;
+  --amber: #c8893a;
+  --amber-pale: #dba85c;
+  --offwhite: #f0ece4;
+  --offwhite-dim: #c9c3b8;
+  --copper: #b56e3a;
+  --gold: #d4a843;
+  --gold-dim: #9a7830;
+  --text-main: #e8e2d8;
+  --text-dim: #9a9490;
+  --text-muted: #5a5652;
+  --border: rgba(200,137,58,0.18);
+  --border-strong: rgba(200,137,58,0.35);
+  --card-bg: #1e1e28;
+  --card-border: rgba(200,137,58,0.15);
+  --phish-red: #a83030;
+  --phish-red-bg: rgba(168,48,48,0.12);
+  --legit-green: #3a6e4a;
+  --legit-green-bg: rgba(58,110,74,0.12);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--graphite);
+  color: var(--text-main);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  min-height: 100vh;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 20% 10%, rgba(92,26,46,0.2) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(58,66,40,0.15) 0%, transparent 60%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.015'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+h1, h2, h3 { font-family: 'Playfair Display', serif; }
+code, .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+
+/* ─── LAYOUT ─── */
+.container { max-width: 960px; margin: 0 auto; padding: 0 2rem; }
+
+/* ─── HEADER ─── */
+.site-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 0;
+  background: rgba(26,26,31,0.85);
+  backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 100;
+}
+.site-header .container {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem; font-style: italic;
+  color: var(--amber);
+  letter-spacing: 0.02em;
+}
+.brand span { color: var(--offwhite-dim); font-style: normal; font-size: 0.75rem; display: block; letter-spacing: 0.15em; text-transform: uppercase; }
+.threat-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; color: var(--wine-pale);
+  border: 1px solid var(--wine-light);
+  padding: 0.3rem 0.7rem; border-radius: 2px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  animation: pulse-border 3s ease-in-out infinite;
+}
+@keyframes pulse-border {
+  0%,100% { border-color: var(--wine-light); color: var(--wine-pale); }
+  50% { border-color: var(--wine-pale); color: var(--offwhite); }
+}
+
+/* ─── SCREENS ─── */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ─── INTRO SCREEN ─── */
+.intro-hero {
+  padding: 6rem 0 4rem;
+  text-align: center;
+}
+.intro-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--amber); margin-bottom: 1.5rem;
+}
+.intro-eyebrow::before, .intro-eyebrow::after {
+  content: '—'; margin: 0 0.7rem; opacity: 0.5;
+}
+.intro-title {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.15;
+  color: var(--offwhite);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.01em;
+}
+.intro-title em {
+  font-style: italic; color: var(--amber);
+}
+.intro-subtitle {
+  font-size: 1.05rem; color: var(--offwhite-dim);
+  max-width: 560px; margin: 0 auto 3rem;
+  font-weight: 300;
+}
+.intro-brief {
+  background: var(--card-bg);
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--amber);
+  border-radius: 4px;
+  padding: 1.8rem 2.2rem;
+  max-width: 640px; margin: 0 auto 3.5rem;
+  text-align: left;
+}
+.intro-brief p {
+  color: var(--offwhite-dim); font-size: 0.95rem; line-height: 1.75;
+}
+.intro-brief strong { color: var(--amber); font-weight: 500; }
+
+/* ─── FORM ─── */
+.form-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2.5rem;
+  max-width: 520px; margin: 0 auto;
+}
+.form-panel h3 {
+  font-size: 1.1rem; color: var(--amber);
+  margin-bottom: 1.8rem; font-style: italic;
+}
+.form-group { margin-bottom: 1.5rem; }
+.form-group label {
+  display: block; font-size: 0.78rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--offwhite-dim); margin-bottom: 0.5rem;
+}
+.form-group input, .form-group select {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  padding: 0.75rem 1rem;
+  color: var(--offwhite);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--amber);
+  background: rgba(200,137,58,0.06);
+}
+.form-group select option { background: var(--graphite-mid); }
+
+.btn-primary {
+  width: 100%;
+  background: var(--wine);
+  border: 1px solid var(--wine-light);
+  color: var(--offwhite);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.9rem 2rem;
+  border-radius: 3px; cursor: pointer;
+  transition: all 0.25s;
+  margin-top: 0.5rem;
+}
+.btn-primary:hover {
+  background: var(--wine-light);
+  border-color: var(--wine-pale);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(92,26,46,0.4);
+}
+
+/* ─── CHALLENGE SCREEN ─── */
+.challenge-header {
+  padding: 3rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 3rem;
+}
+.challenge-header h2 {
+  font-size: 1.7rem; color: var(--offwhite);
+  margin-bottom: 0.4rem;
+}
+.challenge-header p {
+  color: var(--text-dim); font-size: 0.92rem;
+}
+
+/* ─── ARTIFACT CARDS ─── */
+.artifact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.artifact-grid.full { grid-template-columns: 1fr; }
+
+.artifact-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.artifact-card:hover { border-color: var(--border-strong); }
+
+.card-header {
+  padding: 0.8rem 1.2rem;
+  display: flex; align-items: center; gap: 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+.card-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.2rem 0.55rem; border-radius: 2px; font-weight: 500;
+}
+.tag-email { background: rgba(58,66,40,0.4); color: #8aab5a; border: 1px solid rgba(138,171,90,0.25); }
+.tag-phish { background: rgba(168,48,48,0.25); color: #e08080; border: 1px solid rgba(230,100,100,0.25); }
+.tag-osint { background: rgba(200,137,58,0.15); color: var(--amber-pale); border: 1px solid rgba(200,137,58,0.25); }
+.tag-meta { background: rgba(100,100,180,0.15); color: #9090d0; border: 1px solid rgba(120,120,200,0.25); }
+.tag-analysis { background: rgba(92,26,46,0.3); color: var(--wine-pale); border: 1px solid rgba(150,60,80,0.3); }
+
+.card-title {
+  font-size: 0.85rem; color: var(--offwhite-dim); font-weight: 500;
+}
+.card-body { padding: 1.4rem; }
+
+/* ─── EMAIL SIMULATION ─── */
+.email-sim {
+  background: #f8f6f2;
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+  color: #222;
+}
+.email-toolbar {
+  background: #e8e4de;
+  padding: 0.6rem 1rem;
+  display: flex; gap: 0.4rem; align-items: center;
+}
+.email-dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-r { background: #e57171; } .dot-y { background: #e5c271; } .dot-g { background: #71b88e; }
+.email-header-block {
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1px solid #ddd;
+  background: #faf8f5;
+}
+.email-field {
+  font-size: 0.8rem; color: #555;
+  margin-bottom: 0.25rem;
+  display: flex; gap: 0.5rem;
+}
+.email-field strong { color: #333; min-width: 70px; font-weight: 600; }
+.email-field code { font-family: 'JetBrains Mono', monospace; font-size: 0.78em; color: #444; background: #eee; padding: 0.1rem 0.3rem; border-radius: 2px; }
+.email-subject-bar {
+  padding: 0.8rem 1.2rem;
+  background: #f2ede6;
+  border-bottom: 1px solid #ddd;
+  font-size: 0.9rem; font-weight: 600; color: #222;
+}
+.email-body {
+  padding: 1.2rem;
+  font-size: 0.85rem; line-height: 1.7; color: #333;
+}
+.email-logo {
+  width: 120px; height: 32px;
+  background: linear-gradient(90deg, #1a3a6e, #1a5a9e);
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 0.75rem;
+  letter-spacing: 0.05em; margin-bottom: 1rem;
+}
+.email-logo.alt {
+  background: linear-gradient(90deg, #3a1a1a, #6e1a2a);
+  width: 130px;
+}
+.email-cta {
+  display: inline-block;
+  padding: 0.6rem 1.4rem;
+  border-radius: 3px;
+  font-size: 0.82rem; font-weight: 600;
+  text-decoration: none;
+  cursor: default; margin: 0.8rem 0;
+}
+.cta-blue { background: #1a5a9e; color: white; }
+.cta-red { background: #8b1a1a; color: white; }
+.email-signature {
+  border-top: 1px solid #ddd;
+  padding-top: 0.8rem;
+  margin-top: 0.8rem;
+  font-size: 0.78rem; color: #777;
+}
+.email-signature strong { color: #333; display: block; font-size: 0.85rem; }
+.email-url-hover {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; color: #666;
+  background: #eee; padding: 0.2rem 0.5rem;
+  border-radius: 2px; margin-top: 0.3rem;
+}
+
+/* ─── LOGIN PAGE SIM ─── */
+.login-sim {
+  background: #f0f4f8;
+  border-radius: 4px; overflow: hidden;
+}
+.browser-bar {
+  background: #e8e8e8;
+  padding: 0.5rem 0.8rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.browser-btn { width: 10px; height: 10px; border-radius: 50%; }
+.browser-url {
+  flex: 1; background: white;
+  border: 1px solid #ccc; border-radius: 10px;
+  padding: 0.2rem 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; color: #333;
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.lock-icon { font-size: 0.65rem; color: #888; }
+.lock-icon.warn { color: #c0392b; }
+.login-inner {
+  padding: 2rem 1.5rem;
+  display: flex; flex-direction: column; align-items: center;
+}
+.login-logo-big {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem; font-weight: 700;
+  color: #1a3a6e; margin-bottom: 0.3rem;
+}
+.login-tagline { font-size: 0.73rem; color: #888; margin-bottom: 1.5rem; }
+.login-form-sim { width: 100%; max-width: 260px; }
+.login-input-sim {
+  width: 100%; background: white; border: 1px solid #ccc;
+  border-radius: 3px; padding: 0.5rem 0.7rem;
+  margin-bottom: 0.6rem; font-size: 0.82rem; color: #555;
+  font-family: 'DM Sans', sans-serif;
+}
+.login-btn-sim {
+  width: 100%; background: #1a3a6e; color: white;
+  border: none; border-radius: 3px; padding: 0.55rem;
+  font-size: 0.82rem; font-weight: 600; cursor: default;
+  margin-bottom: 0.5rem;
+}
+.login-footer-text { font-size: 0.7rem; color: #999; text-align: center; }
+.login-footer-text a { color: #1a5a9e; text-decoration: none; }
+.login-ssl-note { font-size: 0.65rem; color: #bbb; margin-top: 0.8rem; text-align: center; }
+
+/* ─── OSINT BLOCK ─── */
+.osint-profile {
+  background: var(--graphite-light);
+  border-radius: 4px; padding: 1.2rem;
+}
+.osint-source {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; color: var(--text-dim);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 0.8rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+.osint-row {
+  display: grid; grid-template-columns: 120px 1fr;
+  font-size: 0.82rem; margin-bottom: 0.5rem;
+}
+.osint-key { color: var(--text-muted); font-size: 0.78rem; }
+.osint-val { color: var(--offwhite-dim); }
+.osint-val code { font-size: 0.76em; background: rgba(255,255,255,0.06); padding: 0.1rem 0.3rem; border-radius: 2px; }
+.osint-highlight { color: var(--amber-pale); }
+
+/* ─── METADATA BLOCK ─── */
+.meta-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.meta-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-dim); text-align: left;
+  padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border);
+}
+.meta-table td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: top;
+}
+.meta-table td:first-child { color: var(--text-dim); font-size: 0.8rem; white-space: nowrap; }
+.meta-table td:last-child { font-family: 'JetBrains Mono', monospace; color: var(--offwhite-dim); word-break: break-all; }
+.meta-warn { color: #e08080 !important; }
+.meta-ok { color: #8aab5a !important; }
+.meta-amber { color: var(--amber-pale) !important; }
+
+/* ─── QUESTIONS ─── */
+.questions-section {
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--border);
+}
+.section-title-bar {
+  display: flex; align-items: baseline; gap: 1rem;
+  margin-bottom: 2rem;
+}
+.section-title-bar h3 {
+  font-size: 1.4rem; color: var(--offwhite);
+  font-style: italic;
+}
+.section-title-bar span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; color: var(--text-dim);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+.question-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  padding: 1.6rem;
+  margin-bottom: 1.2rem;
+  transition: border-color 0.2s;
+}
+.question-card:hover { border-color: var(--border-strong); }
+.question-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem; color: var(--amber);
+  letter-spacing: 0.15em; text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+.question-scope {
+  font-size: 0.72rem; color: var(--text-muted);
+  margin-bottom: 0.8rem; font-style: italic;
+}
+.question-text {
+  font-size: 0.97rem; color: var(--offwhite);
+  font-weight: 400; margin-bottom: 1.2rem;
+  line-height: 1.6;
+}
+.options { display: flex; flex-direction: column; gap: 0.55rem; }
+.option-label {
+  display: flex; align-items: flex-start; gap: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.88rem; color: var(--offwhite-dim);
+  line-height: 1.5;
+}
+.option-label:hover {
+  background: rgba(200,137,58,0.07);
+  border-color: rgba(200,137,58,0.25);
+  color: var(--offwhite);
+}
+.option-label input[type=radio] { margin-top: 0.2rem; accent-color: var(--amber); flex-shrink: 0; }
+.option-label.correct-ans {
+  background: rgba(58,110,74,0.2); border-color: rgba(58,150,74,0.5);
+  color: #b0e0c0;
+}
+.option-label.wrong-ans {
+  background: rgba(168,48,48,0.15); border-color: rgba(200,60,60,0.4);
+  color: #e0a0a0;
+}
+
+/* ─── SUBMIT AREA ─── */
+.submit-area {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 1rem; margin: 2.5rem 0;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 6px; background: var(--card-bg);
+}
+.submit-area p { color: var(--text-dim); font-size: 0.87rem; text-align: center; max-width: 480px; }
+.btn-submit {
+  background: var(--olive);
+  border: 1px solid var(--olive-light);
+  color: var(--offwhite);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.85rem 2.5rem;
+  border-radius: 3px; cursor: pointer;
+  transition: all 0.25s;
+}
+.btn-submit:hover {
+  background: var(--olive-light);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(58,66,40,0.5);
+}
+
+/* ─── RESULTS ─── */
+.results-panel {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+}
+.score-display {
+  text-align: center; margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+.score-big {
+  font-family: 'Playfair Display', serif;
+  font-size: 4rem; font-weight: 900;
+  line-height: 1;
+}
+.score-perfect { color: var(--gold); }
+.score-fail { color: var(--wine-pale); }
+.score-label { font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-top: 0.3rem; }
+.score-message { font-size: 1rem; color: var(--offwhite-dim); margin-top: 0.8rem; line-height: 1.6; }
+.score-message em { font-style: italic; color: var(--amber-pale); }
+
+/* ─── COMMENTARY ─── */
+.commentary-section { margin-top: 2rem; }
+.commentary-section h4 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem; color: var(--offwhite);
+  margin-bottom: 1.5rem; font-style: italic;
+}
+.commentary-card {
+  border-left: 2px solid var(--border-strong);
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1.2rem;
+  background: rgba(255,255,255,0.025);
+  border-radius: 0 4px 4px 0;
+}
+.commentary-card.correct { border-left-color: #4a9e6a; }
+.commentary-card.wrong { border-left-color: #a83030; }
+.comm-q { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 0.4rem; letter-spacing: 0.05em; }
+.comm-status {
+  font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 0.8rem; font-weight: 500;
+}
+.comm-status.ok { color: #6abd88; }
+.comm-status.err { color: #e08080; }
+.comm-answer-row { font-size: 0.85rem; margin-bottom: 0.5rem; }
+.comm-answer-row span { color: var(--text-dim); }
+.comm-answer-row strong { color: var(--offwhite-dim); }
+.comm-explanation {
+  margin-top: 0.8rem; padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.87rem; color: var(--offwhite-dim);
+  line-height: 1.7;
+}
+.comm-explanation strong { color: var(--amber-pale); }
+
+/* ─── CERTIFICATE ─── */
+#cert-area { margin-top: 3rem; display: none; }
+.cert-container {
+  position: relative;
+  background: linear-gradient(160deg, #f7f3ec 0%, #ede6d8 40%, #f0e9da 100%);
+  border: 2px solid #b8960c;
+  border-radius: 8px;
+  padding: 3rem 3.5rem;
+  max-width: 760px; margin: 0 auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 0 0 8px rgba(180,140,10,0.08), inset 0 0 0 10px rgba(184,150,12,0.15);
+  color: #2a1f0e;
+  overflow: hidden;
+}
+.cert-ornament {
+  position: absolute;
+  opacity: 0.06;
+  font-size: 18rem;
+  font-family: 'Playfair Display', serif;
+  color: #8a6a10;
+  top: -2rem; right: -2rem;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.cert-header {
+  text-align: center; margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(180,140,10,0.3);
+}
+.cert-issuer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
+  color: #7a5a10; margin-bottom: 0.8rem;
+}
+.cert-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem; font-weight: 900;
+  color: #2a1f0e; margin-bottom: 0.3rem;
+  letter-spacing: -0.01em;
+}
+.cert-subtitle {
+  font-size: 0.82rem; color: #7a6a50; letter-spacing: 0.05em;
+}
+.cert-certify {
+  text-align: center; margin: 2rem 0;
+}
+.cert-certify-text {
+  font-size: 0.9rem; color: #5a4a30;
+  margin-bottom: 1rem; letter-spacing: 0.03em;
+}
+.cert-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem; font-style: italic; font-weight: 700;
+  color: #3a2a0e;
+  border-bottom: 1px solid rgba(180,140,10,0.4);
+  display: inline-block; padding-bottom: 0.2rem;
+  margin-bottom: 0.4rem;
+}
+.cert-pronoun {
+  font-size: 0.78rem; color: #9a7a50;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.cert-body {
+  font-size: 0.88rem; color: #4a3a20;
+  line-height: 1.85; text-align: center;
+  max-width: 520px; margin: 1.5rem auto;
+}
+.cert-challenge-name {
+  font-family: 'Playfair Display', serif;
+  font-style: italic; color: #6a3a10;
+  font-size: 0.95rem;
+}
+.cert-footer {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-top: 2.5rem; padding-top: 1.5rem;
+  border-top: 1px solid rgba(180,140,10,0.3);
+}
+.cert-sig { text-align: center; }
+.cert-sig-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem; font-style: italic; color: #3a2a0e;
+}
+.cert-sig-title { font-size: 0.72rem; color: #9a7a50; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 0.2rem; }
+.cert-seal {
+  width: 80px; height: 80px;
+  border: 2px solid rgba(180,140,10,0.5);
+  border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(180,140,10,0.06);
+  position: relative;
+}
+.cert-seal::before {
+  content: '';
+  position: absolute; inset: 4px;
+  border: 1px dashed rgba(180,140,10,0.4);
+  border-radius: 50%;
+}
+.cert-seal-icon { font-size: 1.6rem; color: #b8960c; }
+.cert-seal-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.45rem; color: #8a6a10;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  text-align: center; margin-top: 0.2rem;
+}
+.cert-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem; color: #9a8060;
+  letter-spacing: 0.08em;
+  margin-top: 0.8rem; text-align: center;
+}
+
+.btn-download {
+  display: block; margin: 1.5rem auto 0;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold);
+  color: var(--offwhite);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.85rem 2.5rem;
+  border-radius: 3px; cursor: pointer;
+  transition: all 0.25s;
+}
+.btn-download:hover {
+  background: var(--gold);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(180,140,10,0.3);
+}
+.cert-locked-msg {
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px dashed var(--wine-light);
+  border-radius: 4px;
+  color: var(--wine-pale); font-size: 0.9rem;
+}
+.cert-locked-msg strong { display: block; font-size: 1rem; margin-bottom: 0.4rem; }
+
+/* ─── FOOTER ─── */
+.site-footer {
+  margin-top: 5rem; padding: 2rem 0;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-muted); font-size: 0.8rem;
+}
+.site-footer strong { color: var(--amber); }
+
+/* ─── UTILITY ─── */
+.hidden { display: none !important; }
+.mt-1 { margin-top: 1rem; } .mb-2 { margin-bottom: 2rem; }
+.indent-note {
+  font-size: 0.78rem; color: var(--text-muted);
+  font-style: italic; margin-top: 0.3rem;
+}
+
+/* ─── RESPONSIVE ─── */
+
+/* Tablet (≤ 860px) */
+@media (max-width: 860px) {
+  .container { padding: 0 1.4rem; }
+
+  .intro-hero { padding: 4rem 0 3rem; }
+  .intro-title { font-size: clamp(1.7rem, 6vw, 2.6rem); }
+
+  .artifact-grid { grid-template-columns: 1fr; }
+
+  .cert-container { padding: 2.2rem 2rem; }
+  .cert-name { font-size: 2rem; }
+  .cert-title { font-size: 1.5rem; }
+}
+
+/* Mobile (≤ 600px) */
+@media (max-width: 600px) {
+  .container { padding: 0 1rem; }
+
+  /* Header */
+  .site-header .container { flex-direction: column; gap: 0.6rem; align-items: flex-start; }
+  .brand span { font-size: 0.65rem; }
+  .threat-badge { font-size: 0.62rem; padding: 0.25rem 0.5rem; }
+
+  /* Intro */
+  .intro-hero { padding: 2.5rem 0 2rem; }
+  .intro-title { font-size: 1.65rem; line-height: 1.2; }
+  .intro-subtitle { font-size: 0.92rem; }
+  .intro-brief { padding: 1.3rem 1.2rem; }
+  .intro-brief p { font-size: 0.88rem; }
+  .intro-eyebrow { font-size: 0.65rem; }
+
+  /* Form */
+  .form-panel { padding: 1.5rem 1.2rem; }
+  .form-group input,
+  .form-group select { font-size: 0.95rem; padding: 0.65rem 0.85rem; }
+  .btn-primary { font-size: 0.82rem; padding: 0.85rem 1.2rem; }
+
+  /* Challenge header */
+  .challenge-header { padding: 2rem 0 1.2rem; margin-bottom: 1.8rem; }
+  .challenge-header h2 { font-size: 1.3rem; }
+
+  /* Artifact cards */
+  .artifact-card { border-radius: 4px; }
+  .card-body { padding: 1rem; }
+  .card-header { padding: 0.6rem 1rem; }
+  .card-title { font-size: 0.78rem; }
+
+  /* Email simulation */
+  .email-body { padding: 0.9rem; font-size: 0.8rem; }
+  .email-header-block { padding: 0.7rem 0.9rem; }
+  .email-field { font-size: 0.74rem; flex-wrap: wrap; gap: 0.2rem; }
+  .email-field strong { min-width: 55px; }
+  .email-subject-bar { font-size: 0.82rem; padding: 0.6rem 0.9rem; }
+  .email-url-hover { font-size: 0.64rem; word-break: break-all; }
+  .email-logo { width: 100px; height: 26px; font-size: 0.68rem; }
+  .email-cta { font-size: 0.76rem; padding: 0.5rem 1rem; }
+  .email-signature { font-size: 0.72rem; }
+
+  /* Browser / login sim */
+  .browser-url { font-size: 0.62rem; }
+  .login-logo-big { font-size: 1.1rem; }
+  .login-tagline { font-size: 0.68rem; }
+  .login-form-sim { max-width: 100%; }
+
+  /* OSINT */
+  .osint-row { grid-template-columns: 100px 1fr; font-size: 0.78rem; }
+  .osint-key { font-size: 0.72rem; }
+
+  /* Metadata table — scrollable wrapper */
+  .meta-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .meta-table { min-width: 480px; font-size: 0.76rem; }
+  .meta-table th { font-size: 0.62rem; padding: 0.4rem 0.6rem; }
+  .meta-table td { padding: 0.45rem 0.6rem; }
+  .meta-table td:last-child { font-size: 0.72em; }
+
+  /* Questions */
+  .questions-section { margin-top: 2rem; padding-top: 1.8rem; }
+  .section-title-bar { flex-direction: column; gap: 0.3rem; margin-bottom: 1.4rem; }
+  .section-title-bar h3 { font-size: 1.15rem; }
+  .question-card { padding: 1.2rem; }
+  .question-num { font-size: 0.62rem; }
+  .question-text { font-size: 0.9rem; }
+  .option-label { font-size: 0.83rem; padding: 0.6rem 0.75rem; }
+
+  /* Submit */
+  .submit-area { padding: 1.4rem 1rem; gap: 0.8rem; }
+  .submit-area p { font-size: 0.82rem; }
+  .btn-submit { font-size: 0.82rem; padding: 0.8rem 1.5rem; }
+
+  /* Results */
+  .results-panel { padding: 1.4rem 1rem; }
+  .score-big { font-size: 3rem; }
+  .score-message { font-size: 0.88rem; }
+  .commentary-card { padding: 1rem; }
+  .comm-explanation { font-size: 0.82rem; }
+
+  /* Certificate */
+  #cert-area { margin-top: 2rem; }
+  .cert-container {
+    padding: 1.8rem 1.3rem;
+    border-radius: 5px;
+  }
+  .cert-title { font-size: 1.25rem; }
+  .cert-issuer { font-size: 0.58rem; letter-spacing: 0.15em; }
+  .cert-name { font-size: 1.5rem; }
+  .cert-body { font-size: 0.8rem; }
+  .cert-footer {
+    flex-direction: column;
+    gap: 1.2rem;
+    align-items: center;
+  }
+  .cert-id { font-size: 0.55rem; text-align: center; }
+  .cert-ornament { font-size: 10rem; top: -1rem; right: -1rem; }
+  .btn-download { font-size: 0.82rem; padding: 0.8rem 1.5rem; width: 100%; }
+
+  /* Cert locked */
+  .cert-locked-msg { font-size: 0.84rem; padding: 1.2rem; }
+
+  /* Footer */
+  .site-footer { padding: 1.5rem 0; font-size: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header class="site-header">
+  <div class="container">
+    <div class="brand">
+      Be Safe
+      <span>Mariana BS · Treinamento em Cibersegurança</span>
+    </div>
+    <div class="threat-badge">⬤ Nível: Alto</div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════ TELA INICIAL ═══════════════════════════════════════ -->
+<div id="screen-intro" class="screen active">
+  <div class="container">
+    <div class="intro-hero">
+      <h1 class="intro-title">
+        Desafio de<br>
+        <em>Engenharia Social</em><br>
+        OSINT + Phishing
+      </h1>
+      <p class="intro-subtitle">
+        Investigue artefatos digitais, correlacione evidências e identifique fraudes como alguém que já viu isso antes — e não clicou.
+      </p>
+
+      <div class="intro-brief">
+        <p>
+          <strong>Cenário:</strong> Um colaborador da empresa <em>Mariana BS Inc</em> encaminhou ao time de segurança três artefatos recebidos em sequência: dois e-mails e um link suspeito. Também há contexto OSINT coletado antes do ataque. Sua tarefa é analisar cada elemento, identificar os vetores de engenharia social utilizados e responder às 6 questões que formam a triagem analítica.<br><br>
+          <strong>Aviso:</strong> O material foi construído para enganar. Algumas coisas parecem legítimas porque o atacante fez questão que parecessem. Você foi avisado — nós nos eximimos de responsabilidade por qualquer crise existencial causada por esta descoberta.
+        </p>
+      </div>
+
+      <div class="form-panel">
+        <h3>Identificação para o certificado</h3>
+        <div class="form-group">
+          <label>Nome completo</label>
+          <input type="text" id="inp-name" placeholder="ex: Ana Beatriz Corrêa">
+        </div>
+        <div class="form-group">
+          <label>Pronome</label>
+          <select id="inp-pronoun">
+            <option value="a participante">Ela / Dela</option>
+            <option value="o participante">Ele / Dele</option>
+            <option value="a/o participante">Elu / Delu</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data de conclusão</label>
+          <input type="date" id="inp-date">
+        </div>
+        <button class="btn-primary" onclick="startChallenge()">Iniciar desafio →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ TELA DO DESAFIO ═══════════════════════════════════════ -->
+<div id="screen-challenge" class="screen">
+  <div class="container">
+    <div class="challenge-header">
+      <h2>Bancada de Análise</h2>
+      <p>Examine cada artefato com atenção. Nada aqui é decorativo — a não ser quando parece importante demais.</p>
+    </div>
+
+    <!-- ── E-MAILS ── -->
+    <div class="artifact-grid">
+
+      <!-- E-MAIL 1 -->
+      <div class="artifact-card">
+        <div class="card-header">
+          <span class="card-tag tag-email">E-mail 01</span>
+          <span class="card-title">Recebido em 14/abr · 09:17</span>
+        </div>
+        <div class="card-body">
+          <div class="email-sim">
+            <div class="email-toolbar">
+              <div class="email-dot dot-r"></div>
+              <div class="email-dot dot-y"></div>
+              <div class="email-dot dot-g"></div>
+            </div>
+            <div class="email-header-block">
+              <div class="email-field"><strong>De:</strong> <span>Plataforma de TI &lt;<code>ti-notificacao@marianabsinc.com.br</code>&gt;</span></div>
+              <div class="email-field"><strong>Para:</strong> <span>colaboradores@marianabsinc.com.br</span></div>
+              <div class="email-field"><strong>Reply-To:</strong> <code>suporte.ti@marianabsînc.com.br</code></div>
+              <div class="email-field"><strong>Data:</strong> <span>14 abr 2025 09:17 (BRT)</span></div>
+            </div>
+            <div class="email-subject-bar">🔔 Ação necessária: validação de acesso — prazo: 24h</div>
+            <div class="email-body">
+              <div class="email-logo alt">Mariana BS Inc IT</div>
+              <p>Prezado(a) colaborador(a),</p>
+              <br>
+              <p>Em virtude da migração do nosso ambiente de autenticação para o novo portal unificado, <strong>é necessário que todos os usuários confirmem suas credenciais de acesso até amanhã, às 18h00</strong>.</p>
+              <br>
+              <p>Contas não validadas serão <strong>suspensas automaticamente</strong> por protocolo de segurança interna (ref. ISO/IEC 27001 – Cláusula 9.4.1).</p>
+              <br>
+              <p>Para manter seu acesso ativo, clique abaixo:</p>
+              <a class="email-cta cta-red" href="#">Confirmar meu acesso agora</a>
+              <div class="email-url-hover">↳ URL exibida ao hover: https://portal.marianabsinc.com.br.authconfirm.net/login?tk=a8f3d</div>
+              <br>
+              <p style="font-size:0.78rem; color:#888;">Este processo leva menos de 2 minutos. Em caso de dúvidas, responda este e-mail ou acesse o portal de suporte interno.</p>
+              <div class="email-signature">
+                <strong>Equipe de TI · Mariana BS Inc</strong>
+                Rua Meia Mole Meia Dura, 1337 · São Paulo, SP<br>
+                ti@marianabsinc.com.br · +55 11 3080-xxxx
+              </div>
+            </div>
+          </div>
+          <p class="indent-note">* URL exibida ao mover o cursor sobre o botão de ação.</p>
+        </div>
+      </div>
+
+      <!-- E-MAIL 2 -->
+      <div class="artifact-card">
+        <div class="card-header">
+          <span class="card-tag tag-email">E-mail 02</span>
+          <span class="card-title">Recebido em 14/abr · 10:44</span>
+        </div>
+        <div class="card-body">
+          <div class="email-sim">
+            <div class="email-toolbar">
+              <div class="email-dot dot-r"></div>
+              <div class="email-dot dot-y"></div>
+              <div class="email-dot dot-g"></div>
+            </div>
+            <div class="email-header-block">
+              <div class="email-field"><strong>De:</strong> <span>Rafael Tavares &lt;<code>r.tavares@marianabsinc.com.br</code>&gt;</span></div>
+              <div class="email-field"><strong>Para:</strong> <span>colaboradores@marianabsinc.com.br</span></div>
+              <div class="email-field"><strong>Reply-To:</strong> <code>r.tavares@marianabsinc.com.br</code></div>
+              <div class="email-field"><strong>Data:</strong> <span>14 abr 2025 10:44 (BRT)</span></div>
+            </div>
+            <div class="email-subject-bar">Re: migração de portal — dúvida sobre o prazo</div>
+            <div class="email-body">
+              <div class="email-logo">Mariana BS Inc</div>
+              <p>Pessoal,</p>
+              <br>
+              <p>Recebi o e-mail da TI sobre a validação de credenciais. Alguém mais achou o link um pouco estranho? Tentei verificar com o setor de infraestrutura e ninguém confirmou nenhuma migração programada para esta semana.</p>
+              <br>
+              <p>Por precaução, recomendo <strong>não clicar no link</strong> antes de confirmarmos com o time de segurança. Já abri chamado #2025-1104 no sistema interno.</p>
+              <br>
+              <p>Qualquer novidade eu aviso.</p>
+              <div class="email-signature">
+                <strong>Rafael Tavares — Analista de Processos</strong>
+                Mariana BS Inc<br>
+                r.tavares@marianabsinc.com.br
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /artifact-grid -->
+
+    <!-- ── LOGIN + OSINT ── -->
+    <div class="artifact-grid">
+
+      <!-- PÁGINA FALSA -->
+      <div class="artifact-card">
+        <div class="card-header">
+          <span class="card-tag tag-phish">Página destino</span>
+          <span class="card-title">URL extraída do botão do E-mail 01</span>
+        </div>
+        <div class="card-body">
+          <div class="login-sim">
+            <div class="browser-bar">
+              <div class="browser-btn" style="background:#e57171"></div>
+              <div class="browser-btn" style="background:#e5c271"></div>
+              <div class="browser-btn" style="background:#71b88e"></div>
+              <div class="browser-url">
+                <span class="lock-icon warn">🔒</span>
+                <span>portal.marianabsinc.com.br<strong>.authconfirm.net</strong>/login?tk=a8f3d</span>
+              </div>
+            </div>
+            <div class="login-inner">
+              <div class="login-logo-big">Mariana BS Inc</div>
+              <div class="login-tagline">Portal Unificado de Autenticação</div>
+              <div class="login-form-sim">
+                <input class="login-input-sim" type="text" value="colaborador@marianabsinc.com.br" readonly>
+                <input class="login-input-sim" type="password" placeholder="••••••••••">
+                <button class="login-btn-sim">Confirmar acesso</button>
+                <div class="login-footer-text">
+                  Problemas? <a href="#">Contato TI</a>
+                </div>
+              </div>
+              <div class="login-ssl-note">🔒 Conexão segura · TLS 1.3 · certificado válido</div>
+            </div>
+          </div>
+          <p class="indent-note">* Certificado SSL emitido para authconfirm.net — domínio registrado há 11 dias.</p>
+        </div>
+      </div>
+
+      <!-- OSINT -->
+      <div class="artifact-card">
+        <div class="card-header">
+          <span class="card-tag tag-osint">OSINT</span>
+          <span class="card-title">Contexto público coletado</span>
+        </div>
+        <div class="card-body">
+          <div class="osint-profile">
+            <div class="osint-source">// fonte: LinkedIn público + WHOIS + registros abertos</div>
+            <div class="osint-row">
+              <div class="osint-key">Empresa alvo</div>
+              <div class="osint-val">Mariana BS Inc</div>
+            </div>
+            <div class="osint-row">
+              <div class="osint-key">Setor TI</div>
+              <div class="osint-val osint-highlight">Mariana Bastos — gerente de infraestrutura (LinkedIn)</div>
+            </div>
+            <div class="osint-row">
+              <div class="osint-key">Post recente</div>
+              <div class="osint-val">"Iniciando a migração para nosso novo portal de identidade digital — processo concluído em 30 dias!" <span style="color:var(--text-muted)">— 08/abr/2025</span></div>
+            </div>
+            <div class="osint-row">
+              <div class="osint-key">Domínio legítimo</div>
+              <div class="osint-val"><code>marianabsinc.com.br</code> — registrado 2016</div>
+            </div>
+            <div class="osint-row">
+              <div class="osint-key">Domínio atacante</div>
+              <div class="osint-val"><code>authconfirm.net</code> — registrado 03/abr/2025</div>
+            </div>
+            <div class="osint-row">
+              <div class="osint-key">Reply-To E-01</div>
+              <div class="osint-val osint-highlight"><code>suporte.ti@marianabs<u>î</u>nc.com.br</code> — caractere Unicode U+00EE no 'i'</div>
+            </div>
+            <div class="osint-row">
+              <div class="osint-key">Nota</div>
+              <div class="osint-val" style="font-style:italic; color:var(--text-muted)">O post de Mariana Bastos estava público, sem restrições de privacidade, e mencionava explicitamente a migração para o novo portal.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /artifact-grid -->
+
+    <!-- ── METADADOS ── -->
+    <div class="artifact-grid full">
+      <div class="artifact-card">
+        <div class="card-header">
+          <span class="card-tag tag-meta">Metadados técnicos</span>
+          <span class="card-title">Cabeçalhos simplificados + análise de domínio</span>
+        </div>
+        <div class="card-body">
+          <div class="meta-table-wrap"><table class="meta-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>From (E-01)</td>
+                <td class="meta-ok">ti-notificacao@marianabsinc.com.br</td>
+              </tr>
+              <tr>
+                <td>Reply-To (E-01)</td>
+                <td class="meta-warn">suporte.ti@marianabsînc.com.br — domínio com 'î' (U+00EE, não ASCII)</td>
+              </tr>
+              <tr>
+                <td>SPF E-01</td>
+                <td class="meta-amber">SOFTFAIL — servidor de envio fora do registro SPF declarado</td>
+              </tr>
+              <tr>
+                <td>DKIM E-01</td>
+                <td class="meta-warn">Assinatura ausente para o domínio marianabsinc.com.br</td>
+              </tr>
+              <tr>
+                <td>URL exibida (botão)</td>
+                <td class="meta-warn">portal.marianabsinc.com.br.<strong>authconfirm.net</strong>/login?tk=a8f3d</td>
+              </tr>
+              <tr>
+                <td>Domínio real do destino</td>
+                <td class="meta-warn">authconfirm.net — registrado 03/abr/2025 (11 dias antes do ataque)</td>
+              </tr>
+              <tr>
+                <td>Certificado SSL</td>
+                <td class="meta-amber">Válido para authconfirm.net — emitido grátis via Let's Encrypt</td>
+              </tr>
+              <tr>
+                <td>From (E-02)</td>
+                <td class="meta-ok">r.tavares@marianabsinc.com.br — SPF PASS, DKIM válido</td>
+              </tr>
+              <tr>
+                <td>Reply-To (E-02)</td>
+                <td class="meta-ok">Idêntico ao From — sem desvio</td>
+              </tr>
+              <tr>
+                <td>Referência ISO no E-01</td>
+                <td class="meta-amber">ISO 27001 Cláusula 9.4.1 existe, mas não prevê suspensão automática de contas</td>
+              </tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ QUESTÕES ═══════ -->
+    <div class="questions-section">
+      <div class="section-title-bar">
+        <h3>Triagem Analítica</h3>
+        <span>6 questões · alta dificuldade</span>
+      </div>
+
+      <!-- Q1 -->
+      <div class="question-card">
+        <div class="question-num">Questão 01 de 06</div>
+        <div class="question-scope">Análise de autenticidade · E-mail 01 + Metadados</div>
+        <div class="question-text">
+          O campo <code>From</code> do E-mail 01 exibe <code>ti-notificacao@marianabsinc.com.br</code>. Considerando os metadados disponíveis, qual afirmação descreve com maior precisão o status de legitimidade deste remetente?
+        </div>
+        <div class="options" id="q1-opts">
+          <label class="option-label"><input type="radio" name="q1" value="a"> O domínio exibido no From é válido, porém o resultado SPF SOFTFAIL indica inconsistência na origem do envio, impedindo confirmar a legitimidade do remetente.</label>
+          <label class="option-label"><input type="radio" name="q1" value="b"> O uso do domínio oficial no From, por si só, basta para validar a autenticidade da mensagem como interna.</label>
+          <label class="option-label"><input type="radio" name="q1" value="c"> A ausência de DKIM é prova conclusiva de falsificação completa, independentemente do restante dos cabeçalhos.</label>
+          <label class="option-label"><input type="radio" name="q1" value="d"> SPF SOFTFAIL normalmente indica atraso de DNS e não deve influenciar análise de legitimidade em phishing.</label>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="question-card">
+        <div class="question-num">Questão 02 de 06</div>
+        <div class="question-scope">Análise de URL · E-mail 01 + Página destino</div>
+        <div class="question-text">
+          A URL exibida ao passar o cursor sobre o botão do E-mail 01 é <code>portal.marianabsinc.com.br.authconfirm.net/login?tk=a8f3d</code>. Qual é a interpretação técnica correta sobre o domínio de destino efetivo desta URL?
+        </div>
+        <div class="options" id="q2-opts">
+          <label class="option-label"><input type="radio" name="q2" value="a"> O domínio principal é marianabsinc.com.br, pois ele aparece antes do primeiro trecho que parece suspeito ao usuário.</label>
+          <label class="option-label"><input type="radio" name="q2" value="b"> O domínio efetivo é authconfirm.net, e o prefixo anterior funciona apenas como subdomínio criado para induzir confiança.</label>
+          <label class="option-label"><input type="radio" name="q2" value="c"> A estrutura sugere coexistência operacional entre o domínio legítimo e o atacante, caracterizando obrigatoriamente um proxy reverso.</label>
+          <label class="option-label"><input type="radio" name="q2" value="d"> Sem consulta DNS ativa não se pode inferir o domínio de destino real apenas pela sintaxe da URL apresentada.</label>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="question-card">
+        <div class="question-num">Questão 03 de 06</div>
+        <div class="question-scope">Análise de OSINT + E-mail 01 (correlação obrigatória)</div>
+        <div class="question-text">
+          O post público de Mariana Bastos no LinkedIn, datado de 08/abr/2025, mencionava explicitamente uma migração para "novo portal de identidade digital". O E-mail 01 foi enviado em 14/abr/2025 com linguagem semelhante sobre migração e novo portal. Qual análise descreve melhor o uso dessa informação no contexto do ataque?
+        </div>
+        <div class="options" id="q3-opts">
+          <label class="option-label"><input type="radio" name="q3" value="a"> O paralelismo de linguagem é fraco demais para sugerir uso deliberado de informação pública por um atacante.</label>
+          <label class="option-label"><input type="radio" name="q3" value="b"> Qualquer uso de dado público já caracteriza, por definição, uma operação altamente sofisticada e obrigatoriamente direcionada.</label>
+          <label class="option-label"><input type="radio" name="q3" value="c"> A informação pública pode ter servido para alinhar o pretexto a um evento real da empresa, aumentando a credibilidade da mensagem sem depender só da urgência.</label>
+          <label class="option-label"><input type="radio" name="q3" value="d"> O dado de LinkedIn é irrelevante aqui, porque campanhas desse tipo mantêm a mesma eficácia mesmo sem contexto da vítima.</label>
+        </div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="question-card">
+        <div class="question-num">Questão 04 de 06</div>
+        <div class="question-scope">Análise de Reply-To + Metadados (correlação obrigatória)</div>
+        <div class="question-text">
+          O campo <code>Reply-To</code> do E-mail 01 contém o endereço <code>suporte.ti@marianabsînc.com.br</code>. Qual é a implicação técnica e operacional mais relevante desta diferença em relação ao campo <code>From</code>?
+        </div>
+        <div class="options" id="q4-opts">
+          <label class="option-label"><input type="radio" name="q4" value="a"> Diferenças entre From e Reply-To são sempre normais em mensagens corporativas, mesmo quando há variação visual no domínio.</label>
+          <label class="option-label"><input type="radio" name="q4" value="b"> O caractere Unicode faz o sistema tratar ambos os domínios como idênticos, então a divergência é apenas estética.</label>
+          <label class="option-label"><input type="radio" name="q4" value="c"> A divergência só teria valor analítico caso houvesse evidência paralela de comprometimento do servidor legítimo.</label>
+          <label class="option-label"><input type="radio" name="q4" value="d"> Embora o clique seja o vetor principal, esse Reply-To pode funcionar como caminho alternativo de coleta se o usuário responder ao e-mail achando que fala com a TI.</label>
+        </div>
+      </div>
+
+      <!-- Q5 -->
+      <div class="question-card">
+        <div class="question-num">Questão 05 de 06</div>
+        <div class="question-scope">Página de destino + Certificado SSL + Metadados (correlação obrigatória)</div>
+        <div class="question-text">
+          A página de destino exibe o ícone de cadeado 🔒 e a mensagem "conexão segura · TLS 1.3 · certificado válido". Um colaborador observa isso e considera o site seguro para inserir suas credenciais. Qual é a avaliação analítica mais precisa sobre esse raciocínio?
+        </div>
+        <div class="options" id="q5-opts">
+          <label class="option-label"><input type="radio" name="q5" value="a"> O cadeado indica que a entidade dona do site foi validada de forma suficiente para tornar confiável o envio de credenciais.</label>
+          <label class="option-label"><input type="radio" name="q5" value="b"> O certificado válido demonstra apenas que a sessão está criptografada, não que o domínio pertença à organização esperada pelo usuário.</label>
+          <label class="option-label"><input type="radio" name="q5" value="c"> Certificados gratuitos são indício técnico forte de fraude, pois empresas legítimas costumam usar apenas certificados pagos.</label>
+          <label class="option-label"><input type="radio" name="q5" value="d"> O problema principal da página é não exibir MFA; sem esse fator extra, qualquer portal deve ser tratado como phishing.</label>
+        </div>
+      </div>
+
+      <!-- Q6 -->
+      <div class="question-card">
+        <div class="question-num">Questão 06 de 06</div>
+        <div class="question-scope">Análise integrada — todos os artefatos</div>
+        <div class="question-text">
+          Considerando o conjunto completo: E-mail 01, E-mail 02, página de destino, contexto OSINT e metadados técnicos — qual conclusão analítica representa a avaliação mais precisa e completa do caso?
+        </div>
+        <div class="options" id="q6-opts">
+          <label class="option-label"><input type="radio" name="q6" value="a"> É um phishing genérico centrado em urgência, sem sinais relevantes de adaptação ao contexto da organização alvo.</label>
+          <label class="option-label"><input type="radio" name="q6" value="b"> O caso depende principalmente de evasão avançada de autenticação, sendo os elementos visuais e contextuais apenas acessórios.</label>
+          <label class="option-label"><input type="radio" name="q6" value="c"> O cenário reúne múltiplos indícios convergentes de fraude, sem depender de um único artefato como prova absoluta, exigindo correlação entre contexto, domínio e cabeçalhos.</label>
+          <label class="option-label"><input type="radio" name="q6" value="d"> O alerta interno do E-mail 02 reduz o caso a tentativa malsucedida, o que praticamente elimina risco residual para a organização.</label>
+        </div>
+      </div>
+
+      <!-- SUBMIT -->
+      <div class="submit-area">
+        <p>Após responder todas as questões, clique em corrigir. O certificado será liberado somente com 6/6 acertos. Sem exceções. Nem para quem já passou por 3 certificações ISO.</p>
+        <button class="btn-submit" onclick="submitChallenge()">Corrigir desafio →</button>
+      </div>
+
+      <!-- RESULTS -->
+      <div id="results-panel" class="results-panel hidden">
+        <div class="score-display">
+          <div id="score-big" class="score-big"></div>
+          <div class="score-label">de 6 questões corretas</div>
+          <div id="score-message" class="score-message"></div>
+        </div>
+        <div class="commentary-section">
+          <h4>Respostas Comentadas</h4>
+          <div id="commentary-container"></div>
+        </div>
+      </div>
+
+      <!-- CERT AREA -->
+      <div id="cert-area">
+        <div style="text-align:center; margin-bottom: 2rem;">
+          <div style="font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--gold); font-style:italic; margin-bottom:0.5rem;">Parabéns.</div>
+          <p style="color:var(--offwhite-dim); font-size:0.92rem;">Você analisou cada artefato com a frieza de quem já viu atacante usar LinkedIn para personalizar golpe e achou normal. Aqui está sua prova.</p>
+        </div>
+
+        <div class="cert-container" id="cert-block">
+          <div class="cert-ornament">❝</div>
+          <div class="cert-header">
+            <div class="cert-issuer">Mariana BS · Be Safe · Treinamento em Cibersegurança</div>
+            <div class="cert-title">Certificado de Conclusão</div>
+            <div class="cert-subtitle">Emitido com aproveitamento máximo</div>
+          </div>
+          <div class="cert-certify">
+            <div class="cert-certify-text">Certificamos que</div>
+            <div class="cert-name" id="cert-name">—</div>
+            <div class="cert-pronoun" id="cert-pronoun">—</div>
+          </div>
+          <div class="cert-body">
+            concluiu com aproveitamento máximo o <span class="cert-challenge-name">Desafio de Engenharia Social – OSINT + Phishing</span>, demonstrando capacidade analítica para identificar sinais de fraude, reconhecer técnicas de manipulação, avaliar legitimidade de comunicações digitais e interpretar evidências de engenharia social em contexto operacional.
+          </div>
+          <div class="cert-footer">
+            <div class="cert-id" id="cert-id">—</div>
+            <div class="cert-sig">
+              <div class="cert-sig-name">Mariana BS</div>
+              <div class="cert-sig-title">Be Safe · Cibersegurança &amp; Awareness</div>
+              <div style="font-size:0.72rem; color:#9a7a50; margin-top:0.3rem;" id="cert-date">—</div>
+            </div>
+            <div class="cert-seal">
+              <div class="cert-seal-icon">✦</div>
+              <div class="cert-seal-text">Aprovado<br>100%</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-download" onclick="downloadCert()">⬇ Baixar certificado em PNG</button>
+      </div>
+
+      <!-- CERT LOCKED MSG -->
+      <div id="cert-locked" class="cert-locked-msg hidden">
+        <strong>🔒 Certificado bloqueado</strong>
+        O certificado só é liberado com 6/6 acertos. Revise os comentários analíticos, entenda onde o raciocínio falhou e tente novamente. Faz parte do processo — até o atacante testa antes de atacar.
+      </div>
+
+    </div><!-- /questions-section -->
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <strong>Be Safe</strong> · Mariana BS · Treinamento em Cibersegurança<br>
+    Material de uso educacional. Todos os cenários são fictícios.
+  </div>
+</footer>
+
+<script>
+// ─── GABARITO ───
+const answers = { q1:'a', q2:'b', q3:'c', q4:'d', q5:'b', q6:'c' };
+
+const explanations = {
+  q1: {
+    question: "Status de legitimidade do remetente do E-mail 01",
+    correct: "a",
+    options: {
+      a: "O domínio exibido no From é válido, porém o resultado SPF SOFTFAIL indica inconsistência na origem do envio, impedindo confirmar a legitimidade do remetente.",
+      b: "O uso do domínio oficial no From, por si só, basta para validar a autenticidade da mensagem como interna.",
+      c: "A ausência de DKIM é prova conclusiva de falsificação completa, independentemente do restante dos cabeçalhos.",
+      d: "SPF SOFTFAIL normalmente indica atraso de DNS e não deve influenciar análise de legitimidade em phishing."
+    },
+    explanation: `<strong>Alternativa A</strong> é a correta. O campo <code>From</code> usa um domínio legítimo, mas o resultado <strong>SPF SOFTFAIL</strong> indica que a infraestrutura de envio observada não está claramente autorizada pelo domínio. Isso não prova sozinho falsificação absoluta, porém impede aceitar a mensagem como legítima apenas pelo remetente exibido. <em>Alternativa B</em> erra porque aparência de domínio não substitui verificação de autenticação. <em>Alternativa C</em> exagera: ausência de DKIM enfraquece a confiança, mas não encerra a análise sozinha. <em>Alternativa D</em> está incorreta, pois SOFTFAIL não é mero atraso de DNS por definição; ele é um sinal de inconsistência que precisa ser considerado.`
+  },
+  q2: {
+    question: "Domínio de destino real da URL do botão",
+    correct: "b",
+    options: {
+      a: "O domínio principal é marianabsinc.com.br, pois ele aparece antes do primeiro trecho que parece suspeito ao usuário.",
+      b: "O domínio efetivo é authconfirm.net, e o prefixo anterior funciona apenas como subdomínio criado para induzir confiança.",
+      c: "A estrutura sugere coexistência operacional entre o domínio legítimo e o atacante, caracterizando obrigatoriamente um proxy reverso.",
+      d: "Sem consulta DNS ativa não se pode inferir o domínio de destino real apenas pela sintaxe da URL apresentada."
+    },
+    explanation: `<strong>Alternativa B</strong> é a correta. Em <code>portal.marianabsinc.com.br.authconfirm.net</code>, o domínio registrável é <strong>authconfirm.net</strong>. Tudo que vem antes funciona como subdomínio sob controle de quem registrou esse domínio. <em>Alternativa A</em> representa justamente a leitura apressada que o atacante quer provocar. <em>Alternativa C</em> adiciona uma hipótese operacional que não é sustentada pelo artefato apresentado. <em>Alternativa D</em> está errada porque a própria sintaxe da URL já permite identificar o domínio efetivo, ainda que redirecionamentos posteriores pudessem existir.`
+  },
+  q3: {
+    question: "Uso do post público no contexto do ataque",
+    correct: "c",
+    options: {
+      a: "O paralelismo de linguagem é fraco demais para sugerir uso deliberado de informação pública por um atacante.",
+      b: "Qualquer uso de dado público já caracteriza, por definição, uma operação altamente sofisticada e obrigatoriamente direcionada.",
+      c: "A informação pública pode ter servido para alinhar o pretexto a um evento real da empresa, aumentando a credibilidade da mensagem sem depender só da urgência.",
+      d: "O dado de LinkedIn é irrelevante aqui, porque campanhas desse tipo mantêm a mesma eficácia mesmo sem contexto da vítima."
+    },
+    explanation: `<strong>Alternativa C</strong> é a correta. O valor analítico do OSINT aqui está em tornar o pretexto plausível: a mensagem conversa com um fato real exposto publicamente. Isso aumenta a taxa de confiança da vítima sem exigir um ataque “cinematográfico”. <em>Alternativa A</em> minimiza demais a coincidência contextual. <em>Alternativa B</em> exagera ao tratar qualquer uso de dado público como operação obrigatoriamente muito sofisticada. <em>Alternativa D</em> ignora que contexto relevante tende a reduzir suspeita e aumentar adesão ao golpe.`
+  },
+  q4: {
+    question: "Implicação do Reply-To com caractere Unicode",
+    correct: "d",
+    options: {
+      a: "Diferenças entre From e Reply-To são sempre normais em mensagens corporativas, mesmo quando há variação visual no domínio.",
+      b: "O caractere Unicode faz o sistema tratar ambos os domínios como idênticos, então a divergência é apenas estética.",
+      c: "A divergência só teria valor analítico caso houvesse evidência paralela de comprometimento do servidor legítimo.",
+      d: "Embora o clique seja o vetor principal, esse Reply-To pode funcionar como caminho alternativo de coleta se o usuário responder ao e-mail achando que fala com a TI."
+    },
+    explanation: `<strong>Alternativa D</strong> é a correta. O <code>Reply-To</code> com domínio visualmente parecido cria um segundo vetor de captura: mesmo que a vítima não clique, ela pode responder achando que está interagindo com a área legítima. <em>Alternativa A</em> tenta normalizar uma divergência que, neste caso, vem acompanhada de homógrafo Unicode e portanto merece suspeita. <em>Alternativa B</em> é falsa: o domínio com <code>î</code> não é idêntico ao ASCII original. <em>Alternativa C</em> também erra, porque o valor analítico da divergência existe independentemente de prova de comprometimento do servidor verdadeiro.`
+  },
+  q5: {
+    question: "Certificado SSL e segurança da página de destino",
+    correct: "b",
+    options: {
+      a: "O cadeado indica que a entidade dona do site foi validada de forma suficiente para tornar confiável o envio de credenciais.",
+      b: "O certificado válido demonstra apenas que a sessão está criptografada, não que o domínio pertença à organização esperada pelo usuário.",
+      c: "Certificados gratuitos são indício técnico forte de fraude, pois empresas legítimas costumam usar apenas certificados pagos.",
+      d: "O problema principal da página é não exibir MFA; sem esse fator extra, qualquer portal deve ser tratado como phishing."
+    },
+    explanation: `<strong>Alternativa B</strong> é a correta. HTTPS protege o canal entre navegador e servidor, mas não prova que o servidor pertence à empresa que a vítima acredita estar acessando. O atacante pode obter certificado válido para um domínio sob seu controle e ainda assim operar um portal malicioso. <em>Alternativa A</em> confunde criptografia com legitimidade da identidade. <em>Alternativa C</em> erra ao tratar certificado gratuito como sinal técnico forte de fraude — muitos serviços legítimos usam certificados DV gratuitos. <em>Alternativa D</em> confunde ausência de MFA com prova de phishing; são temas diferentes.`
+  },
+  q6: {
+    question: "Conclusão analítica integrada do caso",
+    correct: "c",
+    options: {
+      a: "É um phishing genérico centrado em urgência, sem sinais relevantes de adaptação ao contexto da organização alvo.",
+      b: "O caso depende principalmente de evasão avançada de autenticação, sendo os elementos visuais e contextuais apenas acessórios.",
+      c: "O cenário reúne múltiplos indícios convergentes de fraude, sem depender de um único artefato como prova absoluta, exigindo correlação entre contexto, domínio e cabeçalhos.",
+      d: "O alerta interno do E-mail 02 reduz o caso a tentativa malsucedida, o que praticamente elimina risco residual para a organização."
+    },
+    explanation: `<strong>Alternativa C</strong> é a correta. A leitura madura deste caso não se apoia em um único “smoking gun”. O que fecha a análise é a convergência entre <strong>SPF inconsistente</strong>, <strong>Reply-To homógrafo</strong>, <strong>URL enganosa</strong>, <strong>domínio recente</strong>, <strong>cadeado em domínio do atacante</strong> e <strong>uso de contexto público</strong> para fortalecer o pretexto. <em>Alternativa A</em> ignora personalização contextual. <em>Alternativa B</em> superestima técnicas de evasão e subestima a engenharia social. <em>Alternativa D</em> desconsidera risco residual: pessoas podem ter clicado antes do alerta circular.`
+  }
+};
+
+const optionLabels = {
+  a: "A", b: "B", c: "C", d: "D"
+};
+
+let userData = {};
+
+function startChallenge() {
+  const name = document.getElementById('inp-name').value.trim();
+  const pronoun = document.getElementById('inp-pronoun').value;
+  const date = document.getElementById('inp-date').value;
+  if (!name) { alert('Por favor, informe seu nome completo.'); return; }
+  if (!date) { alert('Por favor, informe a data de conclusão.'); return; }
+  userData = { name, pronoun, date };
+  document.getElementById('screen-intro').classList.remove('active');
+  document.getElementById('screen-challenge').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function submitChallenge() {
+  const questions = ['q1','q2','q3','q4','q5','q6'];
+  let allAnswered = true;
+  let userAnswers = {};
+
+  for (const q of questions) {
+    const sel = document.querySelector(`input[name="${q}"]:checked`);
+    if (!sel) { allAnswered = false; break; }
+    userAnswers[q] = sel.value;
+  }
+
+  if (!allAnswered) {
+    alert('Responda todas as 6 questões antes de corrigir.');
+    return;
+  }
+
+  let score = 0;
+  questions.forEach(q => {
+    if (userAnswers[q] === answers[q]) score++;
+  });
+
+  // show results
+  document.getElementById('results-panel').classList.remove('hidden');
+
+  const scoreBig = document.getElementById('score-big');
+  const scoreMsg = document.getElementById('score-message');
+  scoreBig.textContent = `${score}/6`;
+
+  if (score === 6) {
+    scoreBig.className = 'score-big score-perfect';
+    scoreMsg.innerHTML = `Aproveitamento máximo. Você correlacionou todos os artefatos, identificou o caractere Unicode invisível no Reply-To, entendeu a estrutura de subdomínio enganoso e não se deixou levar pelo cadeado SSL. <em>Bem-vindo(a) ao grupo pequeno de pessoas que não teria clicado.</em>`;
+  } else if (score >= 4) {
+    scoreBig.className = 'score-big score-fail';
+    scoreMsg.innerHTML = `${score} de 6 corretas. Você captou os sinais mais visíveis — mas o atacante conta exatamente com isso. Os elementos que você não identificou são os que passam pela triagem da maioria. <em>Leia os comentários com atenção antes de tentar novamente.</em>`;
+  } else {
+    scoreBig.className = 'score-big score-fail';
+    scoreMsg.innerHTML = `${score} de 6 corretas. Com respeito: o atacante venceu esta rodada. A boa notícia é que treino é exatamente isso — errar em ambiente controlado para não errar quando importa. <em>Revise cada comentário analítico abaixo.</em>`;
+  }
+
+  // highlight options
+  questions.forEach(q => {
+    const opts = document.querySelectorAll(`#${q}-opts .option-label`);
+    opts.forEach(lbl => {
+      const inp = lbl.querySelector('input');
+      if (inp.value === answers[q]) lbl.classList.add('correct-ans');
+      else if (inp.value === userAnswers[q] && userAnswers[q] !== answers[q]) lbl.classList.add('wrong-ans');
+    });
+  });
+
+  // commentary
+  const container = document.getElementById('commentary-container');
+  container.innerHTML = '';
+  questions.forEach((q, i) => {
+    const ex = explanations[q];
+    const isCorrect = userAnswers[q] === answers[q];
+    const div = document.createElement('div');
+    div.className = `commentary-card ${isCorrect ? 'correct' : 'wrong'}`;
+    div.innerHTML = `
+      <div class="comm-q">Questão ${i+1} — ${ex.question}</div>
+      <div class="comm-status ${isCorrect ? 'ok' : 'err'}">${isCorrect ? '✓ Resposta correta' : '✗ Resposta incorreta'}</div>
+      <div class="comm-answer-row"><span>Sua resposta:</span> <strong>Opção ${optionLabels[userAnswers[q]]} — ${ex.options[userAnswers[q]]}</strong></div>
+      ${!isCorrect ? `<div class="comm-answer-row"><span>Resposta correta:</span> <strong>Opção ${optionLabels[answers[q]]} — ${ex.options[answers[q]]}</strong></div>` : ''}
+      <div class="comm-explanation">${ex.explanation}</div>
+    `;
+    container.appendChild(div);
+  });
+
+  // cert logic
+  if (score === 6) {
+    showCert();
+  } else {
+    document.getElementById('cert-area').style.display = 'none';
+    document.getElementById('cert-locked').classList.remove('hidden');
+  }
+
+  document.getElementById('results-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showCert() {
+  document.getElementById('cert-locked').classList.add('hidden');
+  const certArea = document.getElementById('cert-area');
+  certArea.style.display = 'block';
+
+  document.getElementById('cert-name').textContent = userData.name;
+  document.getElementById('cert-pronoun').textContent = userData.pronoun;
+
+  const dateObj = new Date(userData.date + 'T12:00:00');
+  const dateStr = dateObj.toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+  document.getElementById('cert-date').textContent = dateStr;
+
+  // generate ID
+  const raw = userData.name + userData.date + '100pct';
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) {
+    hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+    hash |= 0;
+  }
+  const certId = 'BS-' + Math.abs(hash).toString(16).toUpperCase().padStart(8,'0').slice(0,8);
+  document.getElementById('cert-id').textContent = `ID: ${certId} · ${dateStr}`;
+}
+
+function downloadCert() {
+  const certBlock = document.getElementById('cert-block');
+  html2canvas(certBlock, {
+    scale: 3,
+    useCORS: true,
+    backgroundColor: '#f0ece4',
+    logging: false
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'certificado-osint-phishing.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+
+// set today's date as default
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inp-date').value = today;
+});
+</script>
+</body>
+</html>
